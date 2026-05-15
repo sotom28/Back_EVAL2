@@ -42,30 +42,29 @@ jobs:
           username: ${{ secrets.EC2_USER_EV2 }}
           key: ${{ secrets.EC2_SSH_KEY_EV2 }}
           script: |
-            # Crear la key del backend en la EC2 frontend
+            # 1. Eliminar la llave anterior si existe para evitar "Permission denied" al intentar sobrescribir
+            rm -f ~/BackEV2.pem
+            
+            # 2. Crear la llave con los permisos correctos
             echo "${{ secrets.EC2_SSH_KEYBACK_EV2 }}" > ~/BackEV2.pem
             chmod 600 ~/BackEV2.pem
 
-            # Crear carpeta en el backend
-            ssh -i ~/BackEV2.pem \
-                -o StrictHostKeyChecking=no \
+            # 3. Preparar directorio en el backend (vía Bastion)
+            ssh -i ~/BackEV2.pem -o StrictHostKeyChecking=no \
                 ${{ secrets.EC2_BACKEND_EV2 }}@${{ secrets.EC2_BACKEND_PRIVATE_IP }} \
                 "mkdir -p /home/ec2-user/app"
 
-            # Copiar compose al backend
-            scp -i ~/BackEV2.pem \
-                -o StrictHostKeyChecking=no \
+            # 4. Copiar el archivo docker-compose al backend
+            scp -i ~/BackEV2.pem -o StrictHostKeyChecking=no \
                 /tmp/backend-compose/docker-compose.yml \
                 ${{ secrets.EC2_BACKEND_EV2 }}@${{ secrets.EC2_BACKEND_PRIVATE_IP }}:/home/ec2-user/app/docker-compose.yml
 
-            # Deploy en el backend
-            ssh -i ~/BackEV2.pem \
-                -o StrictHostKeyChecking=no \
+            # 5. Ejecutar despliegue en el backend
+            # Se añade '|| true' en docker compose down para que no falle si no hay contenedores previos
+            ssh -i ~/BackEV2.pem -o StrictHostKeyChecking=no \
                 ${{ secrets.EC2_BACKEND_EV2 }}@${{ secrets.EC2_BACKEND_PRIVATE_IP }} \
                 "docker pull ${{ secrets.DOCKERHUB_USERNAME }}/backend:latest && \
                  cd /home/ec2-user/app && \
-                 docker compose down && \
+                 docker compose down || true && \
                  docker compose up -d && \
                  docker compose ps"
-
-           
