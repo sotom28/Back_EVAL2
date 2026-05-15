@@ -42,12 +42,12 @@ jobs:
           username: ${{ secrets.EC2_USER_EV2 }}
           key: ${{ secrets.EC2_SSH_KEY_EV2 }}
           script: |
-            scp -i ~/.ssh/backend_key \
+            scp -i ~/BackEV2.pem \
                 -o StrictHostKeyChecking=no \
                 /tmp/backend-compose/docker-compose.yml \
                 ${{ secrets.EC2_BACKEND_EV2 }}@${{ secrets.EC2_BACKEND_PRIVATE_IP }}:/home/ec2-user/app/docker-compose.yml
 
-            ssh -i ~/.ssh/backend_key \
+            ssh -i ~/BackEV2.pem \
                 -o StrictHostKeyChecking=no \
                 ${{ secrets.EC2_BACKEND_EV2 }}@${{ secrets.EC2_BACKEND_PRIVATE_IP }} \
                 "docker pull ${{ secrets.DOCKERHUB_USERNAME }}/backend:latest && \
