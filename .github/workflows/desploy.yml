@@ -31,7 +31,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_FRONTEND_HOST_EV2 }}
           username: ${{ secrets.EC2_USER_EV2 }}
-          key: ${{ secrets.EC2_SSH_KEY_EV2 }}
+          key: ${{ secrets.EC2_SSH_KEYBACK_EV2 }}
           source: "docker-compose.yml"
           target: "/tmp/backend-compose"
 
@@ -40,15 +40,13 @@ jobs:
         with:
           host: ${{ secrets.EC2_FRONTEND_HOST_EV2 }}
           username: ${{ secrets.EC2_USER_EV2 }}
-          key: ${{ secrets.EC2_SSH_KEY_EV2 }}
+          key: ${{ secrets.EC2_SSH_KEYBACK_EV2 }}
           script: |
-            # Copiar compose al backend usando la IP privada
             scp -i ~/.ssh/backend_key \
                 -o StrictHostKeyChecking=no \
                 /tmp/backend-compose/docker-compose.yml \
                 ${{ secrets.EC2_BACKEND_EV2 }}@${{ secrets.EC2_BACKEND_PRIVATE_IP }}:/home/ec2-user/app/docker-compose.yml
 
-            # Conectarse al backend y hacer el deploy
             ssh -i ~/.ssh/backend_key \
                 -o StrictHostKeyChecking=no \
                 ${{ secrets.EC2_BACKEND_EV2 }}@${{ secrets.EC2_BACKEND_PRIVATE_IP }} \
