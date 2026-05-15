@@ -40,7 +40,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_FRONTEND_HOST_EV2 }}
           username: ${{ secrets.EC2_USER_EV2 }}
-          key: ${{ secrets.EC2_SSH_KEYBACK_EV2 }}
+          key: ${{ secrets.EC2_SSH_KEY_EV2 }}
           script: |
             scp -i ~/.ssh/backend_key \
                 -o StrictHostKeyChecking=no \
