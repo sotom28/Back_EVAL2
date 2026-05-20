@@ -26,13 +26,19 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/backend:latest
 
-      - name: Copiar docker-compose.yml a EC2 frontend (bastion)
+      # --- NUEVO PASO: Crear el archivo .env en el Runner de GitHub ---
+      - name: Crear archivo .env desde Secrets
+        run: |
+          echo "${{ secrets.PROD_ENV }}" > .env
+
+      # --- MODIFICADO: Ahora copia "docker-compose.yml" Y ".env" ---
+      - name: Copiar archivos a EC2 frontend (bastion)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_FRONTEND_HOST_EV2 }}
           username: ${{ secrets.EC2_USER_EV2 }}
           key: ${{ secrets.EC2_SSH_KEY_EV2 }}
-          source: "docker-compose.yml"
+          source: "docker-compose.yml,.env"
           target: "/tmp/backend-compose"
 
       - name: Deploy backend via bastion (frontend EC2)
@@ -42,7 +48,7 @@ jobs:
           username: ${{ secrets.EC2_USER_EV2 }}
           key: ${{ secrets.EC2_SSH_KEY_EV2 }}
           script: |
-            # 1. Eliminar la llave anterior si existe para evitar "Permission denied" al intentar sobrescribir
+            # 1. Eliminar la llave anterior si existe para evitar "Permission denied"
             rm -f ~/BackEV2.pem
             
             # 2. Crear la llave con los permisos correctos
@@ -59,8 +65,12 @@ jobs:
                 /tmp/backend-compose/docker-compose.yml \
                 ${{ secrets.EC2_BACKEND_EV2 }}@${{ secrets.EC2_BACKEND_PRIVATE_IP }}:/home/ec2-user/app/docker-compose.yml
 
+            # --- NUEVO: Copiar también el archivo .env al backend ---
+            scp -i ~/BackEV2.pem -o StrictHostKeyChecking=no \
+                /tmp/backend-compose/.env \
+                ${{ secrets.EC2_BACKEND_EV2 }}@${{ secrets.EC2_BACKEND_PRIVATE_IP }}:/home/ec2-user/app/.env
+
             # 5. Ejecutar despliegue en el backend
-            # Se añade '|| true' en docker compose down para que no falle si no hay contenedores previos
             ssh -i ~/BackEV2.pem -o StrictHostKeyChecking=no \
                 ${{ secrets.EC2_BACKEND_EV2 }}@${{ secrets.EC2_BACKEND_PRIVATE_IP }} \
                 "docker pull ${{ secrets.DOCKERHUB_USERNAME }}/backend:latest && \
