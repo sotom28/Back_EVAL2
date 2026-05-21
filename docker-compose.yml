@@ -22,7 +22,7 @@ services:
     image: sotom30/backend:latest  # <--- CAMBIA ESTO (Pon tu usuario real de Docker Hub)
     container_name: backend-app
     ports:
-      - "8080:3000"
+      - "8080:8080"
     env_file:
       - .env
     restart: unless-stopped
