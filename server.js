@@ -39,7 +39,7 @@ app.get('/', (req, res) => {
     });
 });
 
-// Rutas para usuarios
+// Rutas para usuarios a
 // GET - Obtener todos los usuarios
 app.get('/api/usuarios', (req, res) => {
     const query = 'SELECT * FROM usuarios';
@@ -49,7 +49,13 @@ app.get('/api/usuarios', (req, res) => {
             res.status(500).json({ error: 'Error al obtener usuarios' });
             return;
         }
-        res.json(results);
+        res.json(results.map(user => ({
+
+  ...user,
+
+  nombre: user.nombre ? user.nombre.slice(0, 5) : ''
+
+})));
     });
 });
 
